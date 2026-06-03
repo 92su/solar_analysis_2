@@ -449,9 +449,13 @@ if page == "Data Preview":
     missing_min_count = len(full_range_min.difference(df['Timestamp']))
 
     # --- Hour-level ---
-    df['Hour'] = df['Timestamp'].dt.floor('H')
-    full_range_hour = pd.date_range(df['Timestamp'].min(), df['Timestamp'].max(), freq='1H')
-    missing_hour_count = len(full_range_hour.difference(df['Hour']))
+    df['Hour'] = df['Timestamp'].dt.floor('h')
+
+    full_range_hour = pd.date_range(
+        start=df['Timestamp'].min(),
+        end=df['Timestamp'].max(),
+        freq='1h'
+    )
 
     # Summary table
     summary = pd.DataFrame({
