@@ -444,38 +444,64 @@ if page == "Data Preview":
 
     st.markdown("### 🕒 Missing Data Summary")
 
-    # --- Minute-level ---
-    full_range_min = pd.date_range(df['Timestamp'].min(), df['Timestamp'].max(), freq='1min')
-    missing_min_count = len(full_range_min.difference(df['Timestamp']))
+    # Ensure Timestamp is datetime
+    df["Timestamp"] = pd.to_datetime(df["Timestamp"], errors="coerce")
+    df = df.dropna(subset=["Timestamp"])
 
-    # --- Hour-level ---
-    df['Hour'] = df['Timestamp'].dt.floor('h')
-
-    full_range_hour = pd.date_range(
-        start=df['Timestamp'].min(),
-        end=df['Timestamp'].max(),
-        freq='1h'
+    # -----------------------------
+    # Missing Minutes
+    # -----------------------------
+    full_range_min = pd.date_range(
+        start=df["Timestamp"].min(),
+        end=df["Timestamp"].max(),
+        freq="1min"
     )
 
-    # Summary table
+    missing_min_count = len(
+        full_range_min.difference(df["Timestamp"])
+    )
+
+    # -----------------------------
+    # Missing Hours
+    # -----------------------------
+    df["HourFloor"] = df["Timestamp"].dt.floor("h")
+
+    full_range_hour = pd.date_range(
+        start=df["Timestamp"].min(),
+        end=df["Timestamp"].max(),
+        freq="1h"
+    )
+
+    missing_hour_count = len(
+        full_range_hour.difference(df["HourFloor"])
+    )
+
+    # -----------------------------
+    # Summary Table
+    # -----------------------------
     summary = pd.DataFrame({
         "Category": ["Minutes Missing", "Hours Missing"],
-        "Count": [missing_min_count, missing_hour_count]
+        "Count": [
+            int(missing_min_count),
+            int(missing_hour_count)
+        ]
     })
 
-    # ✅ Fix: Ensure Count is integer
-    summary["Count"] = summary["Count"].astype(int)
-
-    # Color function
     def color_missing(val):
         if val > 1000:
-            return "background-color: #ffcccc"   # red
+            return "background-color:#ffcccc"
         elif val > 0:
-            return "background-color: #fff3cd"   # yellow
-        return "background-color: #d4edda"        # green
+            return "background-color:#fff3cd"
+        else:
+            return "background-color:#d4edda"
 
-    # Show colored summary table
-    st.dataframe(summary.style.applymap(color_missing, subset=["Count"]), height=120)
+    st.dataframe(
+        summary.style.map(
+            color_missing,
+            subset=["Count"]
+        ),
+        use_container_width=True
+    )
 
 # ============================================================
 # --------- PAGE 2: STATISTICS & CORRELATION -----------------
